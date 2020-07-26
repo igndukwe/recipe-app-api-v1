@@ -1,11 +1,18 @@
+#configuration for Travis ci
+# specify language
 language: python
+
+#specify version
 python:
     - "3.8"
 
+# what services
 services:
     - docker
 
+#hooks: before_install, install, before_script, script, after_success: after_failure, after_script, deploy
 before_script: pip install docker-compose
 
+#We want to build code and run the test and flake8 lintin package
 script:
     - docker-compose run app sh -c "python manage.py test && flake8"
