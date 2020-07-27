@@ -22,7 +22,8 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fildes):
         """Creates and saves a new user
         """
-        user = self.model(email=email, **extra_fildes)
+        # normalize_email() converts the 2nd part of the email to lowercases
+        user = self.model(email=self.normalize_email(email), **extra_fildes)
         user.set_password(password)  # password need to be encrypted
         # _db is required for supporting multiple databases
         user.save(using=self._db)
