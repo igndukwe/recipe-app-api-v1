@@ -2,7 +2,8 @@ from django.db import models
 
 
 # Requirments to extend the django user model
-# while making use of some of the features that come with django user model out of the box
+# while making use of some of the features that come with django
+# user model out of the box
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -14,14 +15,17 @@ from django.contrib.auth.models import (
 # for creating a user or super user
 class UserManager(BaseUserManager):
 
-    # password=None: in case you want to create a user that is not active, with no password
-    # **extra_fildes: take any of the extra fileds that passed in when you create a user
+    # password=None: in case you want to create a user that is not active,
+    #  with no password
+    # **extra_fildes: take any of the extra fileds that passed in
+    # when you create a user
     def create_user(self, email, password=None, **extra_fildes):
         """Creates and saves a new user
         """
         user = self.model(email=email, **extra_fildes)
         user.set_password(password)  # password need to be encrypted
-        user.save(using=self._db)  # _db is required for supporting multiple databases
+        # _db is required for supporting multiple databases
+        user.save(using=self._db)
 
         return user
 
