@@ -22,6 +22,8 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fildes):
         """Creates and saves a new user
         """
+        if not email:
+            raise ValueError("Users must have an email address")
         # normalize_email() converts the 2nd part of the email to lowercases
         user = self.model(email=self.normalize_email(email), **extra_fildes)
         user.set_password(password)  # password need to be encrypted
