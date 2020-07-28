@@ -24,10 +24,21 @@ class UserManager(BaseUserManager):
         """
         if not email:
             raise ValueError("Users must have an email address")
-        # normalize_email() converts the 2nd part of the email to lowercases
+        # normalize_email(): ensures that the email domain
+        # (everything after the "@") is lowercase
         user = self.model(email=self.normalize_email(email), **extra_fildes)
         user.set_password(password)  # password need to be encrypted
         # _db is required for supporting multiple databases
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self, email, password):
+        """Creates and saves a new super user
+        """
+        user = self.create_user(email, password)
+        user.is_staff = True
+        user.is_superuser = True
         user.save(using=self._db)
 
         return user
@@ -50,3 +61,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     # By default the username field is username
     # and we have customized it to email
     USERNAME_FIELD = "email"
+
+    # superuser and staff is included
+    # as part of the PermissionsMixin
