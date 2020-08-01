@@ -1,35 +1,26 @@
-# Create a docker compose configuration
-# > docker compose is a tool that allos us to run our docker image 
-#   easily from our project location
+version: '3'
 
-# it allows us to easily manage the different services that make up our project
-# e.g. one service might be the python app
-#      and another one could be the Database
-
-# version
-version: "3"
-
-# The name of our services is app
-# and the build section of the configuration 
-# will be sent to our current directory
-# - volumes perfoms automatic update 
-# e.g when any folder is updated, 
-# it automatically updates in the docker image
-# (hence we map the /app folder in the current dir in local system to the docker img)
-# - command: will be used to run our img in the docker container
-#   > sh -C: is a shell command
-#   > 0.0.0.0 is the host that you will run the server on
-#   > so this will run the django dev server avaliable on all id addresses
-#     that run on the docker container
-#   > 8000: it will run on 8000 which will be mapped to the ports config to our local machine
 services:
     app:
         build:
-            context: . 
-        ports: 
+            context: .
+        ports:
             - "8000:8000"
-        volumes: 
+        volumes:
             - ./app:/app
         command: >
-            sh -C "python manage.py runserver 0.0.0.0:8000"
-            
+            sh -c "python manage.py runserver 0.0.0.0:8000"
+        environment:
+            - DB_HOST=db
+            - DB_NAME=app
+            - DB_USER=postgres
+            - DB_PASS=supersecretpassword
+        depends_on:
+            - db
+
+    db:
+        image: postgres:10-alpine
+        environment:
+            - POSTGRES_DB=app
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=supersecretpassword
