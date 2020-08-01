@@ -93,11 +93,21 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth"
+        ".password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
+    {
+        "NAME": "django.contrib.auth"
+        ".password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth"
+        ".password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth"
+        ".password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -121,7 +131,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 
-###########     ADDED FOR USER AUTHENTICATION      ##############
+# ADDED FOR USER AUTHENTICATION      ##############
 # core is the name of our app
 # User is the name of the class model in our core app
 AUTH_USER_MODEL = "core.User"
