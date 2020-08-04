@@ -10,4 +10,6 @@ urlpatterns = [
     path('create/', views.CreateUserView.as_view(), name='create'),
     # ../user/token/
     path('token/', views.CreateTokenView.as_view(), name='token'),
+    # ../user/token/
+    path('me/', views.ManageUserView.as_view(), name='me'),
 ]

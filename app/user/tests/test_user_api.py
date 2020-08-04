@@ -6,16 +6,17 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 # URL for creating users
-# ../user/create
+# ../user/create/
 CREATE_USER_URL = reverse('user:create')
 # URL neeted to make the HTTP POST request
+# ../user/me/
 TOKEN_URL = reverse('user:token')
+# ../user/me/
+ME_URL = reverse('user:me')
 
 
 # Helper Function to create a user for each test
 # **params: you can add as much parameters
-
-
 def create_user(**params):
     return get_user_model().objects.create_user(**params)
 
@@ -157,4 +158,55 @@ class PublicUserApiTest(TestCase):
         # We do not expect a token and should get a HTTP 400
         self.assertNotIn('token', response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_user_unauthorized(self):
+        """Test that authentication required for users"""
+        # HTTP GET Request
+        response = self.client.get(ME_URL)
+
+        # If you call the URL without authorization
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 # Private API are authenticated API e.g update user, change password
+class PrivateUserApiTests(TestCase):
+    """Test API requests that require authentication"""
+
+    # setup for authentication
+    def setUp(self):
+        self.user = create_user(
+            email='test@gmail.com',
+            password='abcd1234',
+            name='fname',
+        )
+        self.client = APIClient()
+        # helper function that makes it easy to simulate authentication request
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user"""
+        response = self.client.get(ME_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {
+            'name': self.user.name,
+            'email': self.user.email,
+        })
+
+    def test_post_me_not_allowed(self):
+        """Test that POST is not allowed on the me URL"""
+        response = self.client.post(ME_URL, {})
+
+        self.assertEqual(response.status_code,
+                         status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile for authenticated user"""
+        payload = {'name': 'new name', 'password': 'newpassword123'}
+
+        response = self.client.patch(ME_URL, payload)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
