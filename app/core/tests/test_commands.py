@@ -22,7 +22,8 @@ class CommandTests(TestCase):
         """Test waiting for db
         """
         with patch('django.db.utils.ConnectionHandler.__getitem__') as gi:
-            # the 1st 5 times will raise an operational error and 6th is a success
+            # the 1st 5 times will raise an operational error
+            # and 6th will be a success
             gi.side_effect = [OperationalError] * 5 + [True]
             call_command('wait_for_db')  # core/management/wait_for_db.py
             # ckeck that getitem is called five times and sixth is a success
