@@ -2,7 +2,7 @@
 from rest_framework import serializers
 
 # import our Tag model
-from core.models import Tag
+from core.models import Tag, Ingredient
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -17,3 +17,12 @@ class TagSerializer(serializers.ModelSerializer):
 
         # make the id read only
         read_only_Fields = ('id',)
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer for an ingredient object"""
+
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name')
+        read_only_fields = ('id',)

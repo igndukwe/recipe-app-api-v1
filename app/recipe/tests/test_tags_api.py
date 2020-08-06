@@ -78,6 +78,7 @@ class PrivateTagsApiTests(TestCase):
 
         # get this url ../recipe/tag-list
         # with 1 tag returnd to the response list
+        # Client access HTTP GET Response to retrieve data from DB
         response = self.client.get(TAGS_URL)
 
         # response should return a HTTP_200_OK status code
@@ -94,7 +95,7 @@ class PrivateTagsApiTests(TestCase):
         # create a tag payload
         payload = {'name': 'Simple'}
 
-        # do a HTTP POST the payload
+        # do a HTTP POST the payload to DB
         self.client.post(TAGS_URL, payload)
 
         # check if the Tag with name 'Simple' exists
@@ -114,7 +115,7 @@ class PrivateTagsApiTests(TestCase):
         # payload with an empty name
         payload = {'name': ''}
 
-        # do a HTTP POST the payload
+        # do a HTTP POST the payload to DB
         response = self.client.post(TAGS_URL, payload)
 
         # returns a bad request becos empty string does not exist

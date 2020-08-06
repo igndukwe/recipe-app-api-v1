@@ -55,6 +55,8 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
+    # Just to test that the Tag model exists
+    # and that we can create and modify a Tag model
     def test_tag_str(self):
         """Test the tag string representation"""
         tag = models.Tag.objects.create(
@@ -67,3 +69,14 @@ class ModelTests(TestCase):
         # when we convert our tag into a string str(tag)
         # it gives us the name
         self.assertEqual(str(tag), tag.name)
+
+    # Just to test that the Ingredient model exists
+    # and that we can create and modify an Ingredient model
+    def test_ingredient_str(self):
+        """Test the ingredient string representation"""
+        ingredient = models.Ingredient.objects.create(
+            user=sample_user(),
+            name='Cucumber'
+        )
+
+        self.assertEqual(str(ingredient), ingredient.name)
