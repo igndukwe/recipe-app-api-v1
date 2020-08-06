@@ -19,5 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     # pass any request with ..api/user/ to the user.urls.py class to handle
     path('api/user/', include('user.urls')),
+    path('api/recipe/', include('recipe.urls')),
     path('admin/', admin.site.urls),
 ]

@@ -10,9 +10,12 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+from django.conf import settings
 
 # provide helper functions
 # for creating a user or super user
+
+
 class UserManager(BaseUserManager):
 
     # password=None: in case you want to create a user that is not active,
@@ -64,3 +67,22 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # superuser and staff is included
     # as part of the PermissionsMixin
+
+
+class Tag(models.Model):
+    """Tag to be used for a recipe"""
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        # instead of referencing the User object directly
+        # i.e. User,
+        # We wll use the best practice mtd of retrieving
+        # the auth user model setting from the django settings.py
+        settings.AUTH_USER_MODEL,
+        # this means if you delete this user,
+        # delete the tags as well
+        on_delete=models.CASCADE,
+    )
+
+    # string representation of the model
+    def __str__(self):
+        return self.name

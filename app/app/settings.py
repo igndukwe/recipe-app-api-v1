@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # "django.apps.CoreConfig",
     "core",
     "user",
+    "recipe",
 
     # third party app
     "rest_framework",
