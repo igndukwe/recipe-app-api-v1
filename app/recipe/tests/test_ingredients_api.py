@@ -90,3 +90,25 @@ class PrivateIngredientsAPITests(TestCase):
         # check that the name of the tag is the
         # one that we created and assigned to the user
         self.assertEqual(response.data[0]['name'], ingredient.name)
+
+    def test_create_ingredient_successful(self):
+        """Test creating a new ingredient"""
+
+        payload = {'name': 'Cabbage'}
+
+        self.client.post(INGREDIENTS_URL, payload)
+
+        # filter anything that belongs to the authenticated user
+        # with the name Carbage
+        exists = Ingredient.objects.filter(
+            user=self.user,
+            name=payload['name']
+        ).exists()
+        self.assertTrue(exists)
+
+    def test_create_ingredient_invalid(self):
+        """Test creating invalid ingredient fails"""
+        payload = {'name': ''}
+        res = self.client.post(INGREDIENTS_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
