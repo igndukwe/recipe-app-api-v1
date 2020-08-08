@@ -34,7 +34,8 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
         # self.queryset is referencing the queryset
-        # 'queryset = Tag.objects.all()' or'queryset = Ingredient.objects.all()'
+        # 'queryset = Tag.objects.all()'
+        # or 'queryset = Ingredient.objects.all()'
         # then the filtering is performed in the overriden mtd
         # then order by tag name
         return self.queryset.filter(user=self.request.user).order_by('-name')
