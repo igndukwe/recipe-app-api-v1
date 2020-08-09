@@ -2,19 +2,17 @@
 from rest_framework import serializers
 
 # import our Tag model
-from core.models import Tag, Ingredient
+from core.models import Tag, Ingredient, Recipe
 
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for tag object"""
 
     class Meta:
-        # the model class we want to communicate with
+        # point to the model we want to communicate with
         model = Tag
-
-        # fields to display
+        # fields to return
         fields = ('id', 'name')
-
         # make the id read only
         read_only_Fields = ('id',)
 
@@ -23,6 +21,39 @@ class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for an ingredient object"""
 
     class Meta:
+        # point serializer to correct model
         model = Ingredient
+        # list the fields to return in our serializer
         fields = ('id', 'name')
+        read_only_fields = ('id',)
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    """Serialize a recipe"""
+
+    # primary key related fields of ingredient
+    # lists only the primary key ids
+    ingredients = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Ingredient.objects.all()
+    )
+    # primary key related fields of tag
+    # lists only the primary keys
+    # can also list RelatedField
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+
+    class Meta:
+        # point serializer to correct model
+        model = Recipe
+        # list the fields to return in our serializer
+        # > ingredients & tags are references
+        # to ingredients & tags model we need to define them
+        fields = (
+            'id', 'title', 'ingredients', 'tags', 'time_minutes', 'price',
+            'link',
+        )
+        # read only fields
         read_only_fields = ('id',)
