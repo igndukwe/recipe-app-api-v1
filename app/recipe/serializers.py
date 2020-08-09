@@ -57,3 +57,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
         # read only fields
         read_only_fields = ('id',)
+
+# Notice that the difference between
+# RecipeSerializer and RecipeDetailSerializer
+# is that RecipeSerializer returns the Primary Key Related Fields
+# i.e the ids of both ingredients and tags associated with our recipe
+# > while RecipeDetailSerializer returns the details
+# of the ingredients and tags associated with our recipe
+# this is call Nesting Serializers inside each other
+
+
+class RecipeDetailSerializer(RecipeSerializer):
+    """Serialize a recipe detail
+    """
+    # many: means you can have many ingredients associated with a recipie
+    # read_only: you can not create a recipe by providing this values
+    ingredients = IngredientSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)

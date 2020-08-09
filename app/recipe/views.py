@@ -85,7 +85,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # override get_queryset
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
         # limit the object to the authenticated user
         return self.queryset.filter(user=self.request.user)
+
+    # override get_serializer_class
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        # ViewSet actions are:
+        # list, create, retrieve, update, partial update, and destroy
+        # > retrieve is the action used for detailed view
+        # The self.action contains the action of the request currently used
+        # therefore, check that action currently used is the retrieve action
+        if self.action == 'retrieve':
+            return serializers.RecipeDetailSerializer
+
+        return self.serializer_class
+
+    # override perform_create
+    def perform_create(self, serializer):
+        """Create a new recipe"""
+        # viewsets.ModelViewSet allows you to create objects out of the box
+        # so the default is that if you assign a serializer_class
+        # serializer_class = serializers.RecipeSerializer
+        # and its assigned to a model
+        # then it knows how to create new objects with that model
+        # when you do a HTTP POST
+        # > hence what we need to do is to assign authenticated user
+        # to that model once it has been created
+        serializer.save(user=self.request.user)

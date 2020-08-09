@@ -6,14 +6,36 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe
+from core.models import Recipe, Tag, Ingredient
 
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 # recipe => app
 # recipe-list => identifier of the app in the url
 # ../recipe/recipe-list
 RECIPES_URL = reverse('recipe:recipe-list')
+
+# Helper functions
+
+
+def sample_tag(user, name='Main course'):
+    """Create and return a sample tag"""
+    return Tag.objects.create(user=user, name=name)
+
+
+def sample_ingredient(user, name='Cinnamon'):
+    """Create and return a sample ingredient"""
+    return Ingredient.objects.create(user=user, name=name)
+
+# id of the recipe we want to retrive the detail for
+# e.g. if the list url is ../api/recipe/recipe_list/
+# then the dtail url for recipe with id 1 will be
+# ../api/recipe/recipe_list/1/
+
+
+def detail_url(recipe_id):
+    """Return recipe detail URL"""
+    return reverse('recipe:recipe-detail', args=[recipe_id])
 
 # set up a function that allows us to setup a
 # recipe with default values
@@ -103,3 +125,132 @@ class PrivateRecipeApiTests(TestCase):
         # it should return just one result
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data, serializer.data)
+
+    def test_view_recipe_detail(self):
+        """Test viewing a recipe detail"""
+        # create a sample recipe using the sample_recipe() mtd
+        recipe = sample_recipe(user=self.user)
+
+        # add a tag to the recipe
+        # this is how to add in a many-to-many relationship
+        recipe.tags.add(sample_tag(user=self.user))
+
+        # add an ingredient to the recipe
+        recipe.ingredients.add(sample_ingredient(user=self.user))
+
+        # generate the url we are going to call
+        url = detail_url(recipe.id)
+
+        # HTTP GET call
+        response = self.client.get(url)
+
+        # serielizer
+        serializer = RecipeDetailSerializer(recipe)
+
+        # assert that response.data is equals to serializer.data
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_basic_recipe(self):
+        """Test creating recipe"""
+
+        # basic min fields required for creating a recipe
+        payload = {
+            'title': 'Chocolate cheesecakw',
+            'time_minutes': 30,
+            'price': 10.00,
+        }
+
+        # make the HTTP POST
+        response = self.client.post(RECIPES_URL, payload)
+
+        # This is the STD HTTP response status code
+        # for creating an object in the REST API
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # retrieve the created recipe from our models
+        # > when you create an object using the django rest framework
+        #   the default behaviour is that it would return a dic
+        #   containing the created object
+        # hene response.data['id'] retireves the id key of created object
+        #
+        recipe = Recipe.objects.get(id=response.data['id'])
+        # hence we loop through each one of the keys
+        # e.g. {'title': 'Cho', 'time_minutes':30, 'price': 5.00}
+        for key in payload.keys():
+            # hence check that its the correct values assigned to our model
+            # getattr(recipe, key) => recipe.title, recipe.time_minutes ...
+            self.assertEqual(payload[key], getattr(recipe, key))
+
+    def test_create_recipe_with_tags(self):
+        """Test creating a recipe with tags"""
+        # create two tags, tag1 and tag2
+        tag1 = sample_tag(user=self.user, name='Tag 1')
+        tag2 = sample_tag(user=self.user, name='Tag 2')
+
+        # create a payload with fields to create a sample recipe
+        payload = {
+            'title': 'Avocado lime cheescake',
+            'tags': [tag1.id, tag2.id],
+            'time_minutes': 30,
+            'price': 10.00
+        }
+
+        # Make a HTTP POST request to POST payload
+        response = self.client.post(RECIPES_URL, payload)
+
+        # response.status_code should return 201 for object created
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # retrieve the HTTP object that was created
+        recipe = Recipe.objects.get(id=response.data['id'])
+
+        # retrieve the queryset
+        # tags that were created with the recipe
+        tags = recipe.tags.all()
+
+        # count that the tags returned are two
+        # becouse only two tags were created
+        self.assertEqual(tags.count(), 2)
+
+        # check if tag1 is found in the list of tags
+        self.assertIn(tag1, tags)
+
+        # check if tag2 is found in the list of tags
+        self.assertIn(tag2, tags)
+
+    def test_create_recipe_with_ingredients(self):
+        """Test creating recipe with ingredients"""
+        # create two ingredients, ingredient1 and ingredient2
+        ingredient1 = sample_ingredient(user=self.user, name='Prawns')
+        ingredient2 = sample_ingredient(user=self.user, name='Ginger')
+
+        # create a payload with fields to create a sample recipe
+        payload = {
+            'title': 'Thai prawn red curry',
+            'ingredients': [ingredient1.id, ingredient2.id],
+            'time_minutes': 45,
+            'price': 15.00
+        }
+
+        # Make a HTTP POST request to POST payload
+        response = self.client.post(RECIPES_URL, payload)
+
+        # response.status_code should return 201 for object created
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # retrieve the HTTP object that was created
+        recipe = Recipe.objects.get(id=response.data['id'])
+
+        # retrieve the queryset
+        # ingredients that were created with the recipe
+        ingredients = recipe.ingredients.all()
+
+        # count that the tags returned are two
+        # becouse only two tags were created
+        self.assertEqual(ingredients.count(), 2)
+
+        # check if ingredient1 is found in the list of ingredients
+        self.assertIn(ingredient1, ingredients)
+
+        # check if ingredient2 is found in the list of ingredients
+        self.assertIn(ingredient2, ingredients)
