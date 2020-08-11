@@ -128,6 +128,7 @@ class PrivateRecipeApiTests(TestCase):
 
     def test_view_recipe_detail(self):
         """Test viewing a recipe detail"""
+
         # create a sample recipe using the sample_recipe() mtd
         recipe = sample_recipe(user=self.user)
 
@@ -254,3 +255,80 @@ class PrivateRecipeApiTests(TestCase):
 
         # check if ingredient2 is found in the list of ingredients
         self.assertIn(ingredient2, ingredients)
+
+    # Remember, during a partial update
+    # if you exclude any field
+    # then it will not be updated
+    def test_partial_update_recipe(self):
+        """Test updating a recipe with patch"""
+
+        # create a sample recipe using the sample_recipe() mtd
+        recipe = sample_recipe(user=self.user)
+        # add a tag to the recipie
+        recipe.tags.add(sample_tag(user=self.user))
+        # create a new tag
+        new_tag = sample_tag(user=self.user, name='Curry')
+
+        # payload with all the fields needed to create a recipe
+        # hence replace the existing tag with the new tag
+        payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
+
+        # create the url with the id to update
+        url = detail_url(recipe.id)
+
+        # make the HTTP PATCH request to do a partial update
+        self.client.patch(url, payload)
+
+        # update the DB
+        recipe.refresh_from_db()
+
+        # assert that the title is equals to the new title
+        self.assertEqual(recipe.title, payload['title'])
+
+        # retrieve all tags assigned to this recipe
+        tags = recipe.tags.all()
+
+        # check that the lenght of tags is equals to one
+        self.assertEqual(len(tags), 1)
+
+        # check that the new tag is in the tag that we retrieved
+        self.assertIn(new_tag, tags)
+
+    # Remember, during a full update
+    # if you exclude any field
+    # then it will be removed after the update
+    def test_full_update_recipe(self):
+        """Test updating a recipe with put"""
+        # create a sample recipe using the sample_recipe() mtd
+        recipe = sample_recipe(user=self.user)
+        # add a tag to the recipie
+        recipe.tags.add(sample_tag(user=self.user))
+
+        # create a payload with fields
+        payload = {
+            'title': 'Spaghetti carbonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+
+        # create the url with the id to update
+        url = detail_url(recipe.id)
+
+        # make a HTTP POST Request
+        self.client.put(url, payload)
+
+        # refresh from DB to update
+        recipe.refresh_from_db()
+
+        # check each field
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+
+        # retrieve all items
+        tags = recipe.tags.all()
+
+        # check that the tags assigned is zero
+        # because we did not include tags in this update
+        # and should be removed
+        self.assertEqual(len(tags), 0)

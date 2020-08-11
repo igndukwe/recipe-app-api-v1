@@ -1,4 +1,6 @@
 from django.db import models
+import uuid
+import os
 
 
 # Requirments to extend the django user model
@@ -11,6 +13,20 @@ from django.contrib.auth.models import (
 )
 
 from django.conf import settings
+
+
+def recipe_image_file_path(instance, filename):
+    """Generate file path for new recipe image"""
+
+    # strip the file extension part
+    # split the list and return the last part
+    ext = filename.split('.')[-1]
+
+    # Add the uuid as the new file name
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    # return to the destination part to store the file
+    return os.path.join('uploads/recipe/', filename)
 
 # provide helper functions
 # for creating a user or super user
@@ -116,6 +132,11 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     ingredients = models.ManyToManyField('Ingredient')
     tags = models.ManyToManyField('Tag')
+    # add image field,
+    # null=True means image is optional
+    # pass a reference to the fuction via the upload_to
+    # so that fuction can be called anythime there is a file upload
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         return self.title

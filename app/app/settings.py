@@ -134,9 +134,22 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+# 127.0.0.1:800/static/
 STATIC_URL = "/static/"
+# 127.0.0.1:800/media/
+MEDIA_URL = '/media/'
 
+# ROOT tells django where to store all of the media files
+# e.g. /vol/web/media
+# that we created as part of our build process in our docker container
+MEDIA_ROOT = '/vol/web/media'
+# similar to media rool, static root is
+# where all the static files will be dumped
+# when the project is built
+STATIC_ROOT = '/vol/web/static'
+# djanco has a command called 'collectstaticfiles'
+# which pulls all the static files and stores them in the static directory
+# e.g. '/vol/web/static'
 
 # ADDED FOR USER AUTHENTICATION      ##############
 # core is the name of our app
