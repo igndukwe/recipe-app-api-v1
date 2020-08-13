@@ -89,11 +89,46 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # create a private function
+    # to convert ids to tags
+
+    def _params_to_ints(self, qs):
+        """Convert a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in qs.split(',')]
+
     # override get_queryset()
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
+        # query_params: all of the query params provided in the request
+        # 'tags': one of the query params string provided
+        tags = self.request.query_params.get('tags')
+        # 'ingredients': one of the query params string we have provided
+        ingredients = self.request.query_params.get('ingredients')
+
+        # get queryset before we apply filters
+        queryset = self.queryset
+
+        # if tags is not None
+        if tags:
+            # converts all the tag string ids to tag int ids
+            tag_ids = self._params_to_ints(tags)
+
+            # tags__id__in: django syntax for filtering on FK objects
+            # we have a 'tags' field in our recipe queryset
+            # that has a FK to the tags table that has an 'id'
+            # if you want to filter by the remot table you do 'tags__id'
+            # then you can apply another function like 'in'
+            # to become 'tags__id__in'
+            # which then means return all of the tags
+            # where the id is in this list that we provide
+            queryset = queryset.filter(tags__id__in=tag_ids)
+        if ingredients:
+            ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+
         # limit the object to the authenticated user
-        return self.queryset.filter(user=self.request.user)
+        # return self.queryset.filter(user=self.request.user)
+        return queryset.filter(user=self.request.user)
 
     # override get_serializer_class()
     def get_serializer_class(self):

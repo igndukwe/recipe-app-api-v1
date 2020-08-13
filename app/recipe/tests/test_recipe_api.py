@@ -388,3 +388,79 @@ class RecipeImageUploadTests(TestCase):
         res = self.client.post(url, {'image': 'notimage'}, format='multipart')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_filter_recipes_by_tags(self):
+        """Test returning recipes with specific tags"""
+
+        # create sample recipe 1 and 2
+        recipe1 = sample_recipe(user=self.user, title='Thai vegetable curry')
+        recipe2 = sample_recipe(user=self.user, title='Aubergine with tahini')
+
+        # create sample tags 1 and 2
+        tag1 = sample_tag(user=self.user, name='Vegan')
+        tag2 = sample_tag(user=self.user, name='Vegetarian')
+
+        # assign tags 1 and 2 to recipe 1 and 2
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+
+        # create recipe 3
+        # note that we did not assign any tag to recipe 3
+        recipe3 = sample_recipe(user=self.user, title='Fish and chips')
+
+        # make a request for the Vigan and Vegetarian option
+        # in our recipe database
+        # if our filter is working, it should only return the 1st two recipes
+        response = self.client.get(
+            RECIPES_URL,
+            {'tags': f'{tag1.id},{tag2.id}'}
+            # {'tags': '{},{}'.format(tag1.id, tag2.id)}
+        )
+
+        # serialize the recipes objects
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        # check the recipes that exist in the responses returned
+        self.assertIn(serializer1.data, response.data)
+        self.assertIn(serializer2.data, response.data)
+        self.assertNotIn(serializer3.data, response.data)
+
+    def test_filter_recipes_by_ingredients(self):
+        """Test returning recipes with specific ingredients"""
+
+        # create sample recipe 1 and 2
+        recipe1 = sample_recipe(user=self.user, title='Posh beans on toast')
+        recipe2 = sample_recipe(user=self.user, title='Chicken cacciatore')
+
+        # create sample ingredients 1 and 2
+        ingredient1 = sample_ingredient(user=self.user, name='Feta cheese')
+        ingredient2 = sample_ingredient(user=self.user, name='Chicken')
+
+        # assign ingredients 1 and 2 to recipe 1 and 2
+        recipe1.ingredients.add(ingredient1)
+        recipe2.ingredients.add(ingredient2)
+
+        # create recipe 3
+        # note that we did not assign any tag to recipe 3
+        recipe3 = sample_recipe(user=self.user, title='Steak and mushrooms')
+
+        # make a request for the Posh... and Chicken... option
+        # in our recipe database
+        # if our filter is working, it should only return the 1st two recipes
+        response = self.client.get(
+            RECIPES_URL,
+            {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
+            # {'ingredients': '{},{}'.format(ingredient1.id, ingredient2.id)}
+        )
+
+        # serialize the recipes objects
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        # check the recipes that exist in the responses returned
+        self.assertIn(serializer1.data, response.data)
+        self.assertIn(serializer2.data, response.data)
+        self.assertNotIn(serializer3.data, response.data)
