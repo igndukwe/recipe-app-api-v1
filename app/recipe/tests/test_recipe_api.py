@@ -1,3 +1,11 @@
+# pkg for creating temp files
+import tempfile
+# to create file paths on the system
+import os
+
+# pillow requirement
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 # reverse is for generating the urls
@@ -10,12 +18,18 @@ from core.models import Recipe, Tag, Ingredient
 
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
+
 # recipe => app
 # recipe-list => identifier of the app in the url
 # ../recipe/recipe-list
 RECIPES_URL = reverse('recipe:recipe-list')
 
 # Helper functions
+
+
+def image_upload_url(recipe_id):
+    """Return URL for recipe image upload"""
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 
 def sample_tag(user, name='Main course'):
@@ -332,3 +346,45 @@ class PrivateRecipeApiTests(TestCase):
         # because we did not include tags in this update
         # and should be removed
         self.assertEqual(len(tags), 0)
+
+
+class RecipeImageUploadTests(TestCase):
+
+    # setup authenticated client before test runs
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user('user', 'testpass')
+        self.client.force_authenticate(self.user)
+        self.recipe = sample_recipe(user=self.user)
+
+    # tear down after test runs
+    def tearDown(self):
+        self.recipe.image.delete()
+
+    def test_upload_image_to_recipe(self):
+        """Test uploading an image to recipe"""
+        url = image_upload_url(self.recipe.id)
+        # creates a temp file at a random location
+        # ntf means named temp file
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            # create a black square image with dimensions 10 pix
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            # a way python reads files
+            ntf.seek(0)
+            # multipart tells django we want a form with data
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        # refresh DB
+        self.recipe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        # check that the path to image exist in the file system
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.recipe.id)
+        res = self.client.post(url, {'image': 'notimage'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

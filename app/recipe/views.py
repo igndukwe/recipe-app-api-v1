@@ -1,3 +1,5 @@
+
+
 # We are goint to be creating a viewset
 # and basing it of the combination of generic viewset
 # and we are specifically going to use the list model mixins
@@ -8,9 +10,11 @@
 #   we do not want to the create, update, delete functions
 # > we can achive this be a combination of the
 # generic viewset and the list model mixins
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 
 # import the Tag model class
@@ -85,13 +89,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    # override get_queryset
+    # override get_queryset()
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
         # limit the object to the authenticated user
         return self.queryset.filter(user=self.request.user)
 
-    # override get_serializer_class
+    # override get_serializer_class()
     def get_serializer_class(self):
         """Return appropriate serializer class"""
         # ViewSet actions are:
@@ -101,10 +105,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # therefore, check that action currently used is the retrieve action
         if self.action == 'retrieve':
             return serializers.RecipeDetailSerializer
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer
 
         return self.serializer_class
 
-    # override perform_create
+    # override perform_create()
     def perform_create(self, serializer):
         """Create a new recipe"""
         # viewsets.ModelViewSet allows you to create objects out of the box
@@ -116,3 +122,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # > hence what we need to do is to assign authenticated user
         # to that model once it has been created
         serializer.save(user=self.request.user)
+
+    # override the upload_image()
+    # -methods=[]: mtd your action will use, 'GET', 'POST', 'PUT', 'PATCH'
+    # -detail=True: means use only the detail url to upload images
+    # also you will be able to upload images for resipes that already exist
+    # -url_path: path name for our urls
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to a recipe"""
+        # retrieve the recipe object, based on the ID/PK
+        recipe = self.get_object()
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data
+        )
+
+        # check if serializer is valied
+        if serializer.is_valid():
+            serializer.save()
+            # return good response
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        # else return invalied response
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )

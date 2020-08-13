@@ -34,6 +34,6 @@ RUN adduser -D user
 RUN chown -R user:user /vol/
 # user can do everything withing this directory
 # and the rest can read and execute from the directory
-RUN chown -R 755 /vol/web
+RUN chmod -R 755 /vol/web
 # switch to the user
 USER user
